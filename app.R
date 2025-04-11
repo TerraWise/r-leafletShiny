@@ -1,18 +1,15 @@
-library(reticulate)
 library(bslib)
 library(shiny)
 library(leaflet)
+library(leaflet.extras)
+library(dplyr)
+library(sf)
 
-use_condaenv('climate-tool')
 
-py_run_string('import geopandas as gpd')
+CPES <- st_read("input/CPES")
+filtered <- CPES %>% filter(enterprise == "Agricultural")
+filtered$client_id <- NA
 
-py_run_string(
-"CPES = gpd.read_file(os.path.join('input', 'CPES'))
-
-filtered = CPES.loc[CPES['enterprise'].eq('Agricultural')]
-filtered['client_id'] = None"
-)
 
 ui <- page_sidebar(
   title = "LGA Map Viewer",
@@ -20,12 +17,11 @@ ui <- page_sidebar(
     selectizeInput(
       "lga_selection",
       "Select your shire:",
-      choices = unique(py$filtered$lga),
+      choices = unique(filtered$lga),
       multiple = TRUE
     ),
     textOutput("selected_polygon_info")
   ),
-  
   leafletOutput("map", height = 500),
   card(
     card_header("Properties"),
@@ -40,9 +36,9 @@ server <- function(input, output, session) {
   # Filter data based on LGA selection
   subset_cpes <- reactive({
     if (length(input$lga_selection) == 0) {
-      return(py$filtered[0,])  # Empty dataframe with same structure
+      return(filtered[0,])  # Empty dataframe with same structure
     }
-    py$filtered %>% filter(lga %in% input$lga_selection)
+    filtered %>% filter(lga %in% input$lga_selection)
   })
   
   # Calculate map center
@@ -147,24 +143,24 @@ server <- function(input, output, session) {
   })
   
   # Handle polygon clicks
-  observeEvent(input$map_shape_click, {
-    click <- input$map_shape_click
-    selected_polygon_id(click$id)
+  # observeEvent(input$map_shape_click, {
+  #   click <- input$map_shape_click
+  #   selected_polygon_id(click$id)
     
-    # Update the map to highlight the selected polygon
-    leafletProxy("map") %>%
-      clearGroup("highlight") %>%
-      addPolygons(
-        data = subset_cpes() %>% filter(oid_1 == click$id),
-        fillColor = "yellow",
-        weight = 4,
-        opacity = 1,
-        color = "orange",
-        fillOpacity = 0.7,
-        group = "highlight",
-        options = pathOptions(clickable = FALSE)
-      )
-  })
+  #   # Update the map to highlight the selected polygon
+  #   leafletProxy("map") %>%
+  #     clearGroup("highlight") %>%
+  #     addPolygons(
+  #       data = subset_cpes() %>% filter(oid_1 == click$id),
+  #       fillColor = "yellow",
+  #       weight = 4,
+  #       opacity = 1,
+  #       color = "orange",
+  #       fillOpacity = 0.7,
+  #       group = "highlight",
+  #       options = pathOptions(clickable = FALSE)
+  #     )
+  # })
   
   # Render data table
   output$table <- renderDataTable({
