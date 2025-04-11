@@ -1,15 +1,14 @@
-library(bslib)
 library(shiny)
 library(leaflet)
-library(leaflet.extras)
-library(dplyr)
 library(sf)
+library(dplyr)
+library(bslib)
+library(DT)
+library(leaflet.extras)
 
-
+# Try to load data
 CPES <- st_read("input/CPES")
 filtered <- CPES %>% filter(enterprise == "Agricultural")
-client.id <- 90
-
 
 ui <- page_sidebar(
   title = "LGA Map Viewer",
@@ -29,13 +28,17 @@ ui <- page_sidebar(
     actionButton("clear_selection", "Clear All Selections", 
                  icon = icon("trash"), 
                  class = "btn-danger btn-block",
-                 style = "margin-top: 10px;")
+                 style = "margin-top: 10px;"),
+    br(),
+    downloadButton("download_data", "Download Selected Properties", 
+                  class = "btn-success btn-block",
+                  style = "margin-top: 15px;")
   ),
   
   leafletOutput("map", height = 500),
   card(
     card_header("Selected Properties"),
-    dataTableOutput("table")
+    DTOutput("table")
   )
 )
 
@@ -275,6 +278,22 @@ server <- function(input, output, session) {
     
     df
   }, options = list(pageLength = 10, searching = TRUE))
+  
+  # Download handler for selected properties
+  output$download_data <- downloadHandler(
+    filename = function() {
+      paste("selected_properties_", format(Sys.time(), "%Y%m%d"), ".csv", sep = "")
+    },
+    content = function(file) {
+      # Get the current table data
+      data <- table_data() %>%
+        st_drop_geometry()
+      write.csv(
+        data[, !(names(data) %in% c('property_n', 'st_area_sh', 'st_perimet', 'object_id'))], 
+        file
+      )
+    }
+  )
 }
 
 shinyApp(ui, server)
