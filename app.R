@@ -8,7 +8,7 @@ library(sf)
 
 CPES <- st_read("input/CPES")
 filtered <- CPES %>% filter(enterprise == "Agricultural")
-filtered$client_id <- NA
+client.id <- 90
 
 
 ui <- page_sidebar(
@@ -20,11 +20,21 @@ ui <- page_sidebar(
       choices = unique(filtered$lga),
       multiple = TRUE
     ),
-    textOutput("selected_polygon_info")
+    textOutput("selected_polygon_info"),
+    br(),
+    actionButton("add_to_selection", "Add Selected Polygon to Table", 
+                 icon = icon("plus"), 
+                 class = "btn-primary btn-block",
+                 style = "margin-top: 15px;"),
+    actionButton("clear_selection", "Clear All Selections", 
+                 icon = icon("trash"), 
+                 class = "btn-danger btn-block",
+                 style = "margin-top: 10px;")
   ),
+  
   leafletOutput("map", height = 500),
   card(
-    card_header("Properties"),
+    card_header("Selected Properties"),
     dataTableOutput("table")
   )
 )
@@ -33,12 +43,24 @@ server <- function(input, output, session) {
   # Reactive value for selected polygon
   selected_polygon_id <- reactiveVal(NULL)
   
+  # Reactive value to store manually selected polygons
+  selected_polygons <- reactiveVal(character(0))
+  
   # Filter data based on LGA selection
   subset_cpes <- reactive({
     if (length(input$lga_selection) == 0) {
       return(filtered[0,])  # Empty dataframe with same structure
     }
     filtered %>% filter(lga %in% input$lga_selection)
+  })
+  
+  # Get data for the table based on manually selected polygons
+  table_data <- reactive({
+    selected_ids <- selected_polygons()
+    if (length(selected_ids) == 0) {
+      return(filtered[0,])
+    }
+    filtered %>% filter(oid_1 %in% selected_ids)
   })
   
   # Calculate map center
@@ -83,8 +105,8 @@ server <- function(input, output, session) {
       return("No polygon selected")
     }
     
-    subset <- subset_cpes()
-    row <- subset %>% filter(oid_1 == selected_id)
+    # Find the polygon in the full dataset
+    row <- filtered %>% filter(oid_1 == selected_id)
     
     if (nrow(row) == 0) {
       return(paste("Selected ID:", selected_id, "(details not available)"))
@@ -137,34 +159,107 @@ server <- function(input, output, session) {
             bringToFront = TRUE
           )
         )
+      
+      # Add already selected polygons with different color
+      selected_ids <- selected_polygons()
+      if (length(selected_ids) > 0) {
+        selected_data <- subset %>% filter(oid_1 %in% selected_ids)
+        if (nrow(selected_data) > 0) {
+          m <- m %>%
+            addPolygons(
+              data = selected_data,
+              fillColor = "blue",
+              weight = 3,
+              opacity = 1,
+              color = "darkblue",
+              fillOpacity = 0.6,
+              popup = popup_content,
+              group = "selected",
+              options = pathOptions(clickable = FALSE)
+            )
+        }
+      }
     }
     
     m
   })
   
-  # Handle polygon clicks
-  # observeEvent(input$map_shape_click, {
-  #   click <- input$map_shape_click
-  #   selected_polygon_id(click$id)
+  # Add highlighting when a polygon is clicked
+  observeEvent(input$map_shape_click, {
+    click <- input$map_shape_click
+    selected_polygon_id(click$id)
     
-  #   # Update the map to highlight the selected polygon
-  #   leafletProxy("map") %>%
-  #     clearGroup("highlight") %>%
-  #     addPolygons(
-  #       data = subset_cpes() %>% filter(oid_1 == click$id),
-  #       fillColor = "yellow",
-  #       weight = 4,
-  #       opacity = 1,
-  #       color = "orange",
-  #       fillOpacity = 0.7,
-  #       group = "highlight",
-  #       options = pathOptions(clickable = FALSE)
-  #     )
-  # })
+    # Update the map to highlight the selected polygon
+    leafletProxy("map") %>%
+      clearGroup("highlight") %>%
+      addPolygons(
+        data = filtered %>% filter(oid_1 == click$id),
+        fillColor = "yellow",
+        weight = 4,
+        opacity = 1,
+        color = "orange",
+        fillOpacity = 0.7,
+        group = "highlight",
+        options = pathOptions(clickable = FALSE)
+      )
+  })
+  
+  # Add selected polygon to the selection
+  observeEvent(input$add_to_selection, {
+    selected_id <- selected_polygon_id()
+    
+    if (!is.null(selected_id)) {
+      current_selections <- selected_polygons()
+      
+      # Only add if not already in the list
+      if (!selected_id %in% current_selections) {
+        selected_polygons(c(current_selections, selected_id))
+        
+        # Show success notification
+        showNotification(
+          paste("Added polygon", selected_id, "to selection"),
+          type = "message",
+          duration = 3
+        )
+        
+        # Update the map to show selected polygon in blue
+        leafletProxy("map") %>%
+          clearGroup("selected") %>%
+          addPolygons(
+            data = filtered %>% filter(oid_1 %in% selected_polygons()),
+            fillColor = "blue",
+            weight = 3,
+            opacity = 1,
+            color = "darkblue",
+            fillOpacity = 0.6,
+            group = "selected",
+            options = pathOptions(clickable = FALSE)
+          )
+      } else {
+        showNotification("This polygon is already selected", type = "warning", duration = 3)
+      }
+    } else {
+      showNotification("No polygon selected", type = "warning", duration = 3)
+    }
+  })
+  
+  # Clear all selections
+  observeEvent(input$clear_selection, {
+    selected_polygons(character(0))
+    selected_polygon_id(NULL)
+    
+    # Clear highlighting and selection on map
+    leafletProxy("map") %>%
+      clearGroup("highlight") %>%
+      clearGroup("selected")
+    
+    # Show notification
+    showNotification("All selections cleared", type = "message", duration = 3)
+  })
   
   # Render data table
   output$table <- renderDataTable({
-    subset <- subset_cpes()
+    subset <- table_data()
     if (nrow(subset) == 0) {
       return(data.frame())
     }
