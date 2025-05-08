@@ -13,10 +13,14 @@ color:
     green: "#7FB63C"
     blue: "#009CB3"
     black: "#1E1E1E"
+    red: "#D93026"
+    darkgreen: "#4A8A45"
   foreground: black
   primary: orange
   secondary: blue
   tertiary: green
+  danger: red
+  success: darkgreen
   
 typography: 
   fonts: 
