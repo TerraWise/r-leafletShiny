@@ -5,6 +5,16 @@ library(dplyr)
 library(bslib)
 library(DT)
 library(leaflet.extras)
+library(geojsonsf)
+library(aws.s3)
+
+# Set AWS credentials
+bucket_name <- "survey-polygons"
+aws_region <- "ap-southeast-2"
+
+Sys.setenv("AWS_ACCESS_KEY_ID" = "key_id",
+           "AWS_SECRET_ACCESS_KEY" = "access_key",
+           "AWS_DEFAULT_REGION" = aws_region)
 
 # Create a tmp folder if not exists
 if (!dir.exists("input")) {
@@ -25,6 +35,11 @@ unlink("input/", recursive = TRUE)
 ui <- page_sidebar(
   title = "LGA Map Viewer",
   sidebar = sidebar(
+    textInput(
+      "business_name",
+      "Enter your business name:",
+      placeholder = "Business Name"
+    ),
     selectizeInput(
       "lga_selection",
       "Select your shire:",
@@ -42,7 +57,7 @@ ui <- page_sidebar(
                  class = "btn-danger btn-block",
                  style = "margin-top: 10px;"),
     br(),
-    downloadButton("download_data", "Download Selected Properties",
+    actionButton("send_btn", "Send boundaries to TerraWise",
                    class = "btn-success btn-block",
                    style = "margin-top: 15px;")
   ),
@@ -248,25 +263,51 @@ server <- function(input, output, session) {
     if ("property_n" %in% colnames(df)) {
       df <- df %>% select(-property_n)
     }
-
-    df
   }, options = list(pageLength = 10, searching = TRUE))
 
   # Download handler for selected properties
-  output$download_data <- downloadHandler(
-    filename = function() {
-      paste("selected_properties_", format(Sys.time(), "%Y%m%d"), ".csv", sep = "") # nolint: line_length_linter.
-    },
-    content = function(file) {
-      # Get the current table data
-      data <- table_data() %>%
-        st_drop_geometry()
-      write.csv(
-        data[, !(names(data) %in% c("property_n", "st_area_sh", "st_perimet", "object_id"))],  # nolint: line_length_linter.
-        file
-      )
+  observeEvent(input$send_btn, {
+    if (nrow(table_data()) == 0) {
+      showNotification("No properties selected", type = "warning", duration = 3)
+      return()
     }
-  )
+
+    # Create a temporary file to store GeoJSON data
+    temp_file <- tempfile(fileext = ".geojson")
+    # Convert selected data to GeoJSON
+    geojson <- sf_geojson(table_data())
+    # Save the GeoJSON to a file
+    writeLines(geojson, temp_file)
+
+    # Define file name for saving
+    file_name <- paste0(
+      "farm-boundary/", input$business_name,
+      "_planting.geojson"
+    )
+
+    tryCatch({
+      # Upload the GeoJSON file to S3
+      put_object(
+        file = temp_file, object = file_name,
+        bucket = bucket_name, acl = "public-read"
+      )
+
+      showNotification(
+        HTML("<span style='color: green; font-weight: bold;'>✅ Data Saved to TerraWise</span>") # nolint: line_length_linter.
+      )
+
+      # Clear drawn polygons from map
+      leafletProxy("map") %>% clearGroup("selected")
+
+    }, error = function(e) {
+      # Handle any errors that occur during file upload
+      showNotification(
+        HTML(paste0("<span style='color: red; font-weight: bold;'>❌ Error saving data: ", e$message, "</span>")) # nolint: line_length_linter.
+      )
+    })
+
+    unlink(temp_file)  # Delete the temporary file after use
+  })
 }
 
 shinyApp(ui, server)
