@@ -6,10 +6,11 @@ library(bslib)
 library(DT)
 library(leaflet.extras)
 
-# Unzip the data file
+# Create a tmp folder if not exists
 if (!dir.exists("input")) {
   dir.create("input")
 }
+# Unzip the CPES shapefile to the tmp folder
 unzip("Data/CPES.zip", exdir = "input")
 
 # Load the shapefile
@@ -17,6 +18,10 @@ CPES <- st_read("input/CPES")
 CPES <- st_transform(CPES, 4326) # Set CRS to WGS84
 filtered <- CPES %>% filter(enterprise == "Agricultural")
 
+# Delete the tmp folder
+unlink("input/", recursive = TRUE)
+
+# Define UI
 ui <- page_sidebar(
   title = "LGA Map Viewer",
   sidebar = sidebar(
