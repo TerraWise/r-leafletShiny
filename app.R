@@ -58,8 +58,8 @@ ui <- page_sidebar(
                  style = "margin-top: 10px;"),
     br(),
     actionButton("send_btn", "Send boundaries to TerraWise",
-                   class = "btn-success btn-block",
-                   style = "margin-top: 15px;")
+                 class = "btn-success btn-block",
+                 style = "margin-top: 15px;")
   ),
 
   leafletOutput("map", height = 500),
