@@ -307,7 +307,7 @@ server <- function(input, output, session) {
     })
 
     unlink(temp_file)  # Delete the temporary file after use
-  })
+  }, once = TRUE)
 }
 
 shinyApp(ui, server)
