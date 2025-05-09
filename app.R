@@ -329,8 +329,11 @@ server <- function(input, output, session) {
         bucket = bucket_name, acl = "public-read"
       )
 
-      showNotification(
-        HTML("<span style='color: green; font-weight: bold;'>✅ Data Saved to TerraWise</span>") # nolint: line_length_linter.
+      modalDialog(
+        title = "Success",
+        "Your data has been successfully uploaded to TerraWise.",
+        easyClose = FALSE,
+        footer = NULL
       )
 
       # Clear drawn polygons from map
@@ -344,7 +347,7 @@ server <- function(input, output, session) {
     })
 
     unlink(temp_file)  # Delete the temporary file after use
-  }, once = TRUE)
+  })
 }
 
 shinyApp(ui, server)
