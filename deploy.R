@@ -5,4 +5,6 @@ setAccountInfo(name = "terrawise",
                secret = Sys.getenv("SHINY_SECRET"))
 
 deployApp(forceUpdate = TRUE, appPrimaryDoc = NULL,
-          appFiles = c("app.R", "Data/", "www/"))
+          appFiles = c("app.R", "Data/", "www/", "_brand.yml",
+                       "r-leafletShiny.Rproj", "renv.lock",
+                       "renv/", ".Rprofile"))
