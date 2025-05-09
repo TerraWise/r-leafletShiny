@@ -357,8 +357,6 @@ server <- function(input, output, session) {
       showNotification(
         HTML(paste0("<span style='color: red; font-weight: bold;'>❌ Error saving data: ", e$message, "</span>")) # nolint: line_length_linter.
       )
-      print(paste("AWS_ACCESS_KEY_ID:", Sys.getenv("AWS_ACCESS_KEY_ID")))
-      print(paste("AWS_SECRET_ACCESS_KEY:", Sys.getenv("AWS_SECRET_ACCESS_KEY"))) # nolint: line_length_linter.
     })
 
 
