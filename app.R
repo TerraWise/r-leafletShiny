@@ -70,8 +70,6 @@ ui <- fluidPage(
           choices = unique(filtered$lga),
           multiple = TRUE, width = "100%"
         ),
-        textOutput("selected_polygon_info"),
-        br(),
         actionButton("add_to_selection", "Add Selected Polygon to Table",
                      icon = icon("plus"), class = "btn-secondary btn-block",
                      style = "margin-top: 15px; color: white;", width = "100%")
@@ -161,18 +159,6 @@ server <- function(input, output, session) {
     return(c(avg_lat, avg_lon))
   })
 
-  # Display information about selected polygon
-  output$selected_polygon_info <- renderText({
-    if (is.null(selected_polygon())) {
-      return("No polygon selected")
-    }
-
-    # Find the polygon in the full dataset
-    row <- filtered %>% filter(oid_1 == selected_polygon()$id)
-
-    paste0("Selected: Object ", row$oid_1, " - ", row$lga, " - Area: ", row$property_a) # nolint: line_length_linter.
-  })
-
   # Render leaflet map
   output$map <- renderLeaflet({
     # Initialize the map
@@ -209,7 +195,7 @@ server <- function(input, output, session) {
           data = subset, fillColor = "red",
           weight = 2, opacity = 1, layerId = ~oid_1,
           color = "red", fillOpacity = 0.4,
-          popup = popup_content, popupOptions = popupOptions(autoClose = TRUE),
+          popup = popup_content, popupOptions = popupOptions(closeOnClick = TRUE), # nolint: line_length_linter.
           highlight = highlightOptions(
             weight = 4,
             color = "#666",
