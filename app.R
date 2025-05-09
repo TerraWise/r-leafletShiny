@@ -7,18 +7,20 @@ library(DT)
 library(leaflet.extras)
 library(geojsonsf)
 library(aws.s3)
-library(sass)
 
 # Turn off color contrast warnings
 options(bslib.color_contrast_warnings = FALSE)
 
 # Set AWS credentials
 bucket_name <- "survey-polygons"
-aws_region <- "ap-southeast-2"
 
-Sys.setenv("AWS_ACCESS_KEY_ID" = Sys.getenv("AWS_ACCESS_KEY_ID"),
-           "AWS_SECRET_ACCESS_KEY" = Sys.getenv("AWS_SECRET_ACCESS_KEY"),
-           "AWS_DEFAULT_REGION" = aws_region)
+Sys.setenv(
+  "AWS_ACCESS_KEY_ID" = Sys.getenv("AWS_ACCESS_KEY_ID"),
+  "AWS_SECRET_ACCESS_KEY" = Sys.getenv("AWS_SECRET_ACCESS_KEY"),
+  "AWS_DEFAULT_REGION" = "ap-southeast-2"
+)
+
+print(bucketlist())  # List all accessible buckets
 
 # Create a tmp folder if not exists
 if (!dir.exists("input")) {
