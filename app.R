@@ -193,7 +193,6 @@ server <- function(input, output, session) {
 
       # Add subsetted polygons to the map
       leafletProxy("map") %>%
-        clearShapes() %>%
         setView(lng = center[2], lat = center[1], zoom = 8) %>%
         addPolygons(
           data = subset, fillColor = "red",
