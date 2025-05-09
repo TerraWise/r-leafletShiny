@@ -7,6 +7,10 @@ library(DT)
 library(leaflet.extras)
 library(geojsonsf)
 library(aws.s3)
+library(sass)
+
+# Turn off color contrast warnings
+options(bslib.color_contrast_warnings = FALSE)
 
 # Set AWS credentials
 bucket_name <- "survey-polygons"
@@ -231,6 +235,8 @@ server <- function(input, output, session) {
       if (!selected_id %in% selected_data()$id) {
         selected_data(rbind(selected_polygon(), selected_data()))
 
+        print(selected_data())
+
         # Show success notification
         showNotification(
           paste("Added polygon", selected_id, "to selection"),
@@ -244,7 +250,7 @@ server <- function(input, output, session) {
           addPolygons(
             data = filtered %>% filter(oid_1 %in% selected_data()$id),
             fillColor = "blue", weight = 3, opacity = 1,
-            color = "darkblue", fillOpacity = 0.6, 
+            color = "darkblue", fillOpacity = 0.6,
             group = as.character(selected_id),
             options = pathOptions(clickable = FALSE)
           )
@@ -273,10 +279,14 @@ server <- function(input, output, session) {
     selected_polygon(NULL)
     selected_data(NULL)
 
+    to_be_removed <- table_data()$oid_1
+
+    table_data(NULL)
+
     # Clear highlighting and selection on map
     leafletProxy("map") %>%
       clearGroup("highlight") %>%
-      clearGroup("selected")
+      clearGroup(as.character(to_be_removed))
 
     # Show notification
     showNotification("All selections cleared", type = "message", duration = 3)
