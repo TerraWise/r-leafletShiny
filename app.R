@@ -329,11 +329,13 @@ server <- function(input, output, session) {
         bucket = bucket_name, acl = "public-read"
       )
 
-      modalDialog(
-        title = "Success",
-        "Your data has been successfully uploaded to TerraWise.",
-        easyClose = FALSE,
-        footer = NULL
+      showModal(
+        modalDialog(
+          title = "Success",
+          "Your data has been successfully uploaded to TerraWise.",
+          easyClose = FALSE,
+          footer = NULL
+        )
       )
 
       # Clear drawn polygons from map
