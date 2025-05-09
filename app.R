@@ -130,13 +130,7 @@ server <- function(input, output, session) {
   })
 
   # Get data for the table based on manually selected polygons
-  table_data <- reactive({
-    selected_ids <- selected_data()$id
-    if (is.null(selected_ids)) {
-      return(filtered[0, ])
-    }
-    filtered %>% filter(oid_1 %in% selected_ids)
-  })
+  table_data <- reactiveVal(NULL)
 
   # Calculate map center
   map_center <- reactive({
@@ -215,7 +209,8 @@ server <- function(input, output, session) {
           data = subset, fillColor = "red",
           weight = 2, opacity = 1, layerId = ~oid_1,
           color = "red", fillOpacity = 0.4,
-          popup = popup_content, highlight = highlightOptions(
+          popup = popup_content, popupOptions = popupOptions(autoClose = TRUE),
+          highlight = highlightOptions(
             weight = 4,
             color = "#666",
             fillOpacity = 0.7,
@@ -262,16 +257,29 @@ server <- function(input, output, session) {
           clearGroup("highlight") %>%
           addPolygons(
             data = filtered %>% filter(oid_1 %in% selected_data()$id),
-            fillColor = "blue", weight = 3, opacity = 1, 
-            color = "darkblue", fillOpacity = 0.6, group = "selected",
+            fillColor = "blue", weight = 3, opacity = 1,
+            color = "darkblue", fillOpacity = 0.6, 
+            group = as.character(selected_id),
             options = pathOptions(clickable = FALSE)
           )
+        table_data(filter(filtered, oid_1 %in% selected_data()$id))
       } else {
         showNotification("This polygon is already selected", type = "warning", duration = 3) # nolint: line_length_linter.
       }
     } else {
       showNotification("No polygon selected", type = "warning", duration = 3)
     }
+  })
+
+  # Clear selected boundaries
+  observeEvent(input$clear_selection, {
+    req(input$table_rows_selected)
+    row <- input$table_rows_selected
+
+    leafletProxy("map") %>%
+      clearGroup(table_data()[row, ]$oid_1)
+
+    table_data(table_data()[-row, ])
   })
 
   # Clear all selections
@@ -289,10 +297,10 @@ server <- function(input, output, session) {
   })
 
   # Render data table
-  output$table <- renderDataTable({
+  output$table <- renderDT({
     subset <- table_data()
-    if (nrow(subset) == 0) {
-      return(data.frame())
+    if (is.null(subset)) {
+      return()
     }
 
     # Select columns and convert to dataframe
@@ -303,7 +311,10 @@ server <- function(input, output, session) {
     if ("property_n" %in% colnames(df)) {
       df <- df %>% select(-property_n)
     }
-  }, options = list(pageLength = 10, searching = TRUE))
+
+    datatable(df, options = list(pageLength = 10, searching = TRUE),
+              selection = "single", rownames = FALSE)
+  })
 
   # Download handler for selected properties
   observeEvent(input$send_btn, {
