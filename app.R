@@ -8,6 +8,7 @@ library(leaflet.extras)
 library(geojsonsf)
 library(aws.s3)
 library(sass)
+library(rsconnect)
 
 # Turn off color contrast warnings
 options(bslib.color_contrast_warnings = FALSE)
@@ -16,8 +17,8 @@ options(bslib.color_contrast_warnings = FALSE)
 bucket_name <- "survey-polygons"
 aws_region <- "ap-southeast-2"
 
-Sys.setenv("AWS_ACCESS_KEY_ID" = "key_id",
-           "AWS_SECRET_ACCESS_KEY" = "access_key",
+Sys.setenv("AWS_ACCESS_KEY_ID" = Sys.getenv("AWS_ACCESS_KEY_ID"),
+           "AWS_SECRET_ACCESS_KEY" = Sys.getenv("AWS_SECRET_ACCESS_KEY"),
            "AWS_DEFAULT_REGION" = aws_region)
 
 # Create a tmp folder if not exists
@@ -31,9 +32,6 @@ unzip("Data/CPES.zip", exdir = "input")
 CPES <- st_read("input/CPES") # nolint: object_name_linter.
 CPES <- st_transform(CPES, 4326) # Set CRS to WGS84 # nolint
 filtered <- CPES %>% filter(enterprise == "Agricultural")
-
-# Delete the tmp folder
-unlink("input/", recursive = TRUE)
 
 # Define UI
 ui <- fluidPage(
@@ -367,3 +365,9 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
+setAccountInfo(name = "terrawise",
+               token = Sys.getenv("SHINY_TOKEN"),
+               secret = Sys.getenv("SHINY_SECRET"))
+
+deployApp()
