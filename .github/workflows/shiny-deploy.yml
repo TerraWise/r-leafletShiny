@@ -10,8 +10,7 @@ jobs:
 
     - name: Install R package builder
       run: |
-        /usr/bin/sudo DEBIAN_FRONTEND=noninteractive apt-get install -y 
-        libgdal-dev libgeos-dev libproj-dev libudunits2-dev
+        /usr/bin/sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libgdal-dev libgeos-dev libproj-dev libudunits2-dev
     
     - name: Set up R
       uses: r-lib/actions/setup-r@v2
