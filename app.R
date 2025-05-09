@@ -235,8 +235,6 @@ server <- function(input, output, session) {
       if (!selected_id %in% selected_data()$id) {
         selected_data(rbind(selected_polygon(), selected_data()))
 
-        print(selected_data())
-
         # Show success notification
         showNotification(
           paste("Added polygon", selected_id, "to selection"),
@@ -277,7 +275,13 @@ server <- function(input, output, session) {
   # Clear all selections
   observeEvent(input$clear_selections, {
     selected_polygon(NULL)
-    selected_data(NULL)
+    selected_data(data.frame(
+      id = integer(),
+      .nonce = numeric(),
+      lat = numeric(),
+      lng = numeric(),
+      stringsAsFactors = FALSE
+    ))
 
     to_be_removed <- table_data()$oid_1
 
