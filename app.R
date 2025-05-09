@@ -16,8 +16,8 @@ options(bslib.color_contrast_warnings = FALSE)
 bucket_name <- "survey-polygons"
 aws_region <- "ap-southeast-2"
 
-Sys.setenv("AWS_ACCESS_KEY_ID" = Sys.getenv("AWS_ACCESS_KEY_ID"),
-           "AWS_SECRET_ACCESS_KEY" = Sys.getenv("AWS_SECRET_ACCESS_KEY"),
+Sys.setenv("AWS_ACCESS_KEY_ID" = Sys.getenv("AWS_ID"),
+           "AWS_SECRET_ACCESS_KEY" = Sys.getenv("AWS_SECRET"),
            "AWS_DEFAULT_REGION" = aws_region)
 
 # Create a tmp folder if not exists
@@ -357,8 +357,6 @@ server <- function(input, output, session) {
       showNotification(
         HTML(paste0("<span style='color: red; font-weight: bold;'>❌ Error saving data: ", e$message, "</span>")) # nolint: line_length_linter.
       )
-      print(Sys.getenv("AWS_ACCESS_KEY_ID"))
-      print(Sys.getenv("AWS_SECRET_ACCESS_KEY"))
     })
 
 

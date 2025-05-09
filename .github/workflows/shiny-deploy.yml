@@ -17,19 +17,11 @@ jobs:
 
     - name: Set up renv
       uses: r-lib/actions/setup-renv@v2
-    
-    - name: Debug Environment Variables
-      run: |
-        echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
-        echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     - name: Deploy to ShinyApps
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         SHINY_SECRET: ${{ secrets.SHINY_SECRET }}
         SHINY_TOKEN: ${{ secrets.SHINY_TOKEN }}
       run: |
