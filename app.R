@@ -8,7 +8,6 @@ library(leaflet.extras)
 library(geojsonsf)
 library(aws.s3)
 library(sass)
-library(rsconnect)
 
 # Turn off color contrast warnings
 options(bslib.color_contrast_warnings = FALSE)
@@ -365,9 +364,3 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
-
-setAccountInfo(name = "terrawise",
-               token = Sys.getenv("SHINY_TOKEN"),
-               secret = Sys.getenv("SHINY_SECRET"))
-
-deployApp()

@@ -24,4 +24,4 @@ jobs:
         SHINY_SECRET: ${{ secrets.SHINY_SECRET }}
         SHINY_TOKEN: ${{ secrets.SHINY_TOKEN }}
       run: |
-        Rscript app.R
+        Rscript deploy.R
