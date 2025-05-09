@@ -1,0 +1,29 @@
+meta:
+  name: TerraWise
+  link: https://planfarm.com.au/terrawise/
+
+logo: 
+  small: logo/TerraWise_Icon.png
+  medium: logo/TerraWise_Med.png
+  large: logo/TerraWise_Large.png
+
+color: 
+  palette: 
+    orange: "#FB8D33"
+    green: "#7FB63C"
+    blue: "#009CB3"
+    black: "#1E1E1E"
+    red: "#D93026"
+    darkgreen: "#4A8A45"
+  foreground: black
+  primary: orange
+  secondary: blue
+  tertiary: green
+  danger: red
+  success: darkgreen
+  
+typography: 
+  fonts: 
+    - family: DM Sans
+      source: google
+  base: DM Sans

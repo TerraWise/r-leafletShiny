@@ -32,41 +32,79 @@ filtered <- CPES %>% filter(enterprise == "Agricultural")
 unlink("input/", recursive = TRUE)
 
 # Define UI
-ui <- page_sidebar(
-  title = "LGA Map Viewer",
-  sidebar = sidebar(
-    textInput(
-      "business_name",
-      "Enter your business name:",
-      placeholder = "Business Name"
+ui <- fluidPage(
+  div(
+    style = "display: flex; align-items: center;",
+    titlePanel("🌱 Planfarm TerraWise Planting Entry"),
+    a(
+      href = "instructions.pdf",  # Link to the help page
+      target = "_blank",  # Open the link in a new tab
+      tooltip(
+        icon("circle-question",
+             style = "margin-left: 10px; font-size: 1.5em;"),
+        "Click here to download the instructions",
+        placement = "auto"
+      )  # Add spacing and size # nolint: line_length_linter.
     ),
-    selectizeInput(
-      "lga_selection",
-      "Select your shire:",
-      choices = unique(filtered$lga),
-      multiple = TRUE
-    ),
-    textOutput("selected_polygon_info"),
-    br(),
-    actionButton("add_to_selection", "Add Selected Polygon to Table",
-                 icon = icon("plus"),
-                 class = "btn-primary btn-block",
-                 style = "margin-top: 15px;"),
-    actionButton("clear_selection", "Clear All Selections",
-                 icon = icon("trash"),
-                 class = "btn-danger btn-block",
-                 style = "margin-top: 10px;"),
-    br(),
-    actionButton("send_btn", "Send boundaries to TerraWise",
-                 class = "btn-success btn-block",
-                 style = "margin-top: 15px;")
+    div(
+      style = "margin-left: auto; display: flex; gap: 10px; height: 80px;",
+      img(src = "logo/TerraWise_Med.png"),
+      img(src = "logo/Planfarm_Icon.png")
+    )
   ),
 
-  leafletOutput("map", height = 500),
-  card(
-    card_header("Selected Properties"),
-    DTOutput("table")
-  )
+  br(),
+
+  fluidRow(
+    column(
+      3,
+      div(
+        style = "background-color: #E2F0D9; 
+        padding: 15px; border-radius: 20px;",
+        textInput(
+          "business_name", "Enter your business name:",
+          placeholder = "Business Name", width = "100%"
+        ),
+        selectizeInput(
+          "lga_selection", "Select your shire:",
+          choices = unique(filtered$lga),
+          multiple = TRUE, width = "100%"
+        ),
+        actionButton("add_to_selection", "Add Selected Polygon to Table",
+                     icon = icon("plus"), class = "btn-secondary btn-block",
+                     style = "margin-top: 15px; color: white;", width = "100%")
+      ),
+
+      br(),
+
+      div(
+        style = "background-color: #E2F0D9;
+        padding: 15px; border-radius: 20px;",
+        actionButton("clear_selection", "Clear Selected Property",
+                     icon = icon("trash"), class = "btn-danger btn-block",
+                     style = "margin-top: 10px;", width = "100%"),
+        actionButton("clear_selections", "Clear All Selections",
+                     icon = icon("explosion"), class = "btn-danger btn-block",
+                     style = "margin-top: 10px;", width = "100%")
+      ),
+
+      actionButton("send_btn", "Submit boundaries to TerraWise",
+                   icon = icon("arrow-up-from-bracket"),
+                   class = "btn-primary btn-block",
+                   style = "margin-top: 15px; color: white;", width = "100%")
+    ),
+    column(
+      9,
+      leafletOutput("map", height = "500px"),
+      br(),
+      card(
+        card_header("Selected Properties"),
+        DTOutput("table"), height = "250px"
+      )
+    )
+  ),
+
+  theme = bs_theme(brand = TRUE)
 )
 
 server <- function(input, output, session) {
@@ -90,13 +128,7 @@ server <- function(input, output, session) {
   })
 
   # Get data for the table based on manually selected polygons
-  table_data <- reactive({
-    selected_ids <- selected_data()$id
-    if (is.null(selected_ids)) {
-      return(filtered[0, ])
-    }
-    filtered %>% filter(oid_1 %in% selected_ids)
-  })
+  table_data <- reactiveVal(NULL)
 
   # Calculate map center
   map_center <- reactive({
@@ -125,18 +157,6 @@ server <- function(input, output, session) {
     avg_lat <- mean(centroid_matrix[, 2])
 
     return(c(avg_lat, avg_lon))
-  })
-
-  # Display information about selected polygon
-  output$selected_polygon_info <- renderText({
-    if (is.null(selected_polygon())) {
-      return("No polygon selected")
-    }
-
-    # Find the polygon in the full dataset
-    row <- filtered %>% filter(oid_1 == selected_polygon()$id)
-
-    paste0("Selected: Object ", row$oid_1, " - ", row$lga, " - Area: ", row$property_a) # nolint: line_length_linter.
   })
 
   # Render leaflet map
@@ -175,7 +195,8 @@ server <- function(input, output, session) {
           data = subset, fillColor = "red",
           weight = 2, opacity = 1, layerId = ~oid_1,
           color = "red", fillOpacity = 0.4,
-          popup = popup_content, highlight = highlightOptions(
+          popup = popup_content, popupOptions = popupOptions(closeOnClick = TRUE), # nolint: line_length_linter.
+          highlight = highlightOptions(
             weight = 4,
             color = "#666",
             fillOpacity = 0.7,
@@ -222,10 +243,12 @@ server <- function(input, output, session) {
           clearGroup("highlight") %>%
           addPolygons(
             data = filtered %>% filter(oid_1 %in% selected_data()$id),
-            fillColor = "blue", weight = 3, opacity = 1, 
-            color = "darkblue", fillOpacity = 0.6, group = "selected",
+            fillColor = "blue", weight = 3, opacity = 1,
+            color = "darkblue", fillOpacity = 0.6, 
+            group = as.character(selected_id),
             options = pathOptions(clickable = FALSE)
           )
+        table_data(filter(filtered, oid_1 %in% selected_data()$id))
       } else {
         showNotification("This polygon is already selected", type = "warning", duration = 3) # nolint: line_length_linter.
       }
@@ -234,8 +257,19 @@ server <- function(input, output, session) {
     }
   })
 
-  # Clear all selections
+  # Clear selected boundaries
   observeEvent(input$clear_selection, {
+    req(input$table_rows_selected)
+    row <- input$table_rows_selected
+
+    leafletProxy("map") %>%
+      clearGroup(table_data()[row, ]$oid_1)
+
+    table_data(table_data()[-row, ])
+  })
+
+  # Clear all selections
+  observeEvent(input$clear_selections, {
     selected_polygon(NULL)
     selected_data(NULL)
 
@@ -249,10 +283,10 @@ server <- function(input, output, session) {
   })
 
   # Render data table
-  output$table <- renderDataTable({
+  output$table <- renderDT({
     subset <- table_data()
-    if (nrow(subset) == 0) {
-      return(data.frame())
+    if (is.null(subset)) {
+      return()
     }
 
     # Select columns and convert to dataframe
@@ -263,7 +297,10 @@ server <- function(input, output, session) {
     if ("property_n" %in% colnames(df)) {
       df <- df %>% select(-property_n)
     }
-  }, options = list(pageLength = 10, searching = TRUE))
+
+    datatable(df, options = list(pageLength = 10, searching = TRUE),
+              selection = "single", rownames = FALSE)
+  })
 
   # Download handler for selected properties
   observeEvent(input$send_btn, {
@@ -292,8 +329,13 @@ server <- function(input, output, session) {
         bucket = bucket_name, acl = "public-read"
       )
 
-      showNotification(
-        HTML("<span style='color: green; font-weight: bold;'>✅ Data Saved to TerraWise</span>") # nolint: line_length_linter.
+      showModal(
+        modalDialog(
+          title = "Success",
+          "Your data has been successfully uploaded to TerraWise.",
+          easyClose = FALSE,
+          footer = NULL
+        )
       )
 
       # Clear drawn polygons from map
@@ -307,7 +349,7 @@ server <- function(input, output, session) {
     })
 
     unlink(temp_file)  # Delete the temporary file after use
-  }, once = TRUE)
+  })
 }
 
 shinyApp(ui, server)
