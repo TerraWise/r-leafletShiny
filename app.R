@@ -269,6 +269,7 @@ server <- function(input, output, session) {
       clearGroup(table_data()[row, ]$oid_1)
 
     table_data(table_data()[-row, ])
+    selected_data(selected_data()[-row, ])
   })
 
   # Clear all selections
