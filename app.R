@@ -16,8 +16,8 @@ options(bslib.color_contrast_warnings = FALSE)
 bucket_name <- "survey-polygons"
 aws_region <- "ap-southeast-2"
 
-Sys.setenv("AWS_ACCESS_KEY_ID" = Sys.getenv("AWS_ID"),
-           "AWS_SECRET_ACCESS_KEY" = Sys.getenv("AWS_SECRET"),
+Sys.setenv("AWS_ACCESS_KEY_ID" = Sys.getenv("AWS_ACCESS_KEY_ID"),
+           "AWS_SECRET_ACCESS_KEY" = Sys.getenv("AWS_SECRET_ACCESS_KEY"),
            "AWS_DEFAULT_REGION" = aws_region)
 
 # Create a tmp folder if not exists
