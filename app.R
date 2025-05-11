@@ -7,7 +7,6 @@ library(DT)
 library(leaflet.extras)
 library(geojsonsf)
 library(aws.s3)
-library(sass)
 
 # Turn off color contrast warnings
 options(bslib.color_contrast_warnings = FALSE)
