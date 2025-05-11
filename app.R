@@ -31,9 +31,6 @@ CPES <- st_read("input/CPES") # nolint: object_name_linter.
 CPES <- st_transform(CPES, 4326) # Set CRS to WGS84 # nolint
 filtered <- CPES %>% filter(enterprise == "Agricultural")
 
-# Delete the tmp folder
-unlink("input/", recursive = TRUE)
-
 # Define UI
 ui <- fluidPage(
   div(
