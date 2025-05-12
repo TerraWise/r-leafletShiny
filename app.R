@@ -74,10 +74,10 @@ ui <- fluidPage(
           choices = unique(filtered$lga),
           multiple = TRUE, width = "100%"
         ),
-        actionButton("add_to_selection", "Add Selected Polygon to Table",
+        actionButton("add_to_selection", "Add Selected Property to Table",
                      icon = icon("plus"), class = "btn-secondary btn-block",
                      style = "margin-top: 15px; color: white;", width = "100%"),
-        actionButton("clear_selection", "Clear Selected Property",
+        actionButton("clear_selection", "Clear Selected Property(s)",
                      icon = icon("trash"), class = "btn-danger btn-block",
                      style = "margin-top: 10px;", width = "100%"),
         actionButton("clear_selections", "Clear All Selections",
@@ -261,11 +261,13 @@ server <- function(input, output, session) {
     req(input$table_rows_selected)
     row <- input$table_rows_selected
 
-    leafletProxy("map") %>%
-      clearGroup(table_data()[row, ]$oid_1)
+    for (i in row) {
+      leafletProxy("map") %>%
+        clearGroup(table_data()[i, ]$oid_1)
 
-    table_data(table_data()[-row, ])
-    selected_data(selected_data()[-row, ])
+      table_data(table_data()[-i, ])
+      selected_data(selected_data()[-i, ])
+    }
   })
 
   # Clear all selections
@@ -325,7 +327,7 @@ server <- function(input, output, session) {
     }
 
     datatable(df, options = list(pageLength = 10, searching = TRUE),
-              selection = "single", rownames = FALSE)
+              selection = "multiple", rownames = FALSE)
   })
 
   # Download handler for selected properties
