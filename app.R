@@ -270,6 +270,22 @@ server <- function(input, output, session) {
 
   # Clear all selections
   observeEvent(input$clear_selections, {
+    req(table_data())
+    showModal(
+      modalDialog(
+        "Are you sure you want to clear all selections?",
+        title = "Clear All Selections",
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("confirm_clear", "Clear All", class = "btn-danger")
+        ),
+        easyClose = TRUE
+      )
+    )
+  })
+
+  observeEvent(input$confirm_clear, {
+    removeModal()
     selected_polygon(NULL)
     selected_data(data.frame(
       id = integer(),
