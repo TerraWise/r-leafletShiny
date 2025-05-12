@@ -15,7 +15,7 @@ options(bslib.color_contrast_warnings = FALSE)
 bucket_name <- "survey-polygons"
 aws_region <- "ap-southeast-2"
 
-AWS_credentials <- read.csv("s3-poly-access_accessKeys.csv")
+AWS_credentials <- read.csv("s3-poly-access_accessKeys.csv") # nolint: object_name_linter.
 
 Sys.setenv("AWS_ACCESS_KEY_ID" = AWS_credentials$Access.key.ID,
            "AWS_SECRET_ACCESS_KEY" = AWS_credentials$Secret.access.key,
@@ -37,7 +37,7 @@ filtered <- CPES %>% filter(enterprise == "Agricultural")
 ui <- fluidPage(
   div(
     style = "display: flex; align-items: center;",
-    titlePanel("🌱 Planfarm TerraWise Planting Entry"),
+    titlePanel("🌱 Planfarm TerraWise Pick Your Boudnary"),
     a(
       href = "instructions.pdf",  # Link to the help page
       target = "_blank",  # Open the link in a new tab
