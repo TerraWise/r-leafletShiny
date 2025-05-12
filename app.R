@@ -11,6 +11,8 @@ library(aws.s3)
 # Turn off color contrast warnings
 options(bslib.color_contrast_warnings = FALSE)
 
+sf_use_s2(FALSE) # Disable S2 geometry for sf package
+
 # Set AWS credentials
 bucket_name <- "survey-polygons"
 aws_region <- "ap-southeast-2"
@@ -72,10 +74,10 @@ ui <- fluidPage(
           choices = unique(filtered$lga),
           multiple = TRUE, width = "100%"
         ),
-        actionButton("add_to_selection", "Add Selected Polygon to Table",
+        actionButton("add_to_selection", "Add Selected Property to Table",
                      icon = icon("plus"), class = "btn-secondary btn-block",
                      style = "margin-top: 15px; color: white;", width = "100%"),
-        actionButton("clear_selection", "Clear Selected Property",
+        actionButton("clear_selection", "Clear Selected Property(s)",
                      icon = icon("trash"), class = "btn-danger btn-block",
                      style = "margin-top: 10px;", width = "100%"),
         actionButton("clear_selections", "Clear All Selections",
@@ -188,15 +190,14 @@ server <- function(input, output, session) {
       leafletProxy("map") %>%
         setView(lng = center[2], lat = center[1], zoom = 8) %>%
         addPolygons(
-          data = subset, fillColor = "red",
+          data = subset, fillColor = "#D93026",
           weight = 2, opacity = 1, layerId = ~oid_1,
-          color = "red", fillOpacity = 0.4,
+          color = "#92182B", fillOpacity = 0.4,
           popup = popup_content, popupOptions = popupOptions(closeOnClick = TRUE), # nolint: line_length_linter.
           highlight = highlightOptions(
             weight = 4,
-            color = "#666",
-            fillOpacity = 0.7,
-            bringToFront = TRUE
+            color = "#E2E3E4",
+            fillOpacity = 0.7
           )
         )
     }
@@ -209,10 +210,11 @@ server <- function(input, output, session) {
     # Update the map to highlight the selected polygon
     leafletProxy("map") %>%
       clearGroup("highlight") %>%
+      clearSearchOSM() %>%
       addPolygons(
         data = filtered %>% filter(oid_1 == selected_polygon()$id),
         fillColor = "yellow", weight = 4, opacity = 1,
-        color = "orange", fillOpacity = 0.7, group = "highlight",
+        color = "#FB8D33", fillOpacity = 0.7, group = "highlight",
         options = pathOptions(clickable = FALSE)
       )
   })
@@ -239,10 +241,10 @@ server <- function(input, output, session) {
           clearGroup("highlight") %>%
           addPolygons(
             data = filtered %>% filter(oid_1 %in% selected_data()$id),
-            fillColor = "blue", weight = 3, opacity = 1,
-            color = "darkblue", fillOpacity = 0.6,
+            fillColor = "#19B4CA", weight = 3, opacity = 1,
+            color = "#009CB2", fillOpacity = 0.6,
             group = as.character(selected_id),
-            options = pathOptions(clickable = FALSE)
+            options = pathOptions(interactive = FALSE)
           )
         table_data(filter(filtered, oid_1 %in% selected_data()$id))
       } else {
@@ -255,18 +257,43 @@ server <- function(input, output, session) {
 
   # Clear selected boundaries
   observeEvent(input$clear_selection, {
-    req(input$table_rows_selected)
     row <- input$table_rows_selected
 
-    leafletProxy("map") %>%
-      clearGroup(table_data()[row, ]$oid_1)
+    if (is.null(row)) {
+      showNotification("No rows selected", type = "warning", duration = 3)
+      return()
+    }
 
-    table_data(table_data()[-row, ])
-    selected_data(selected_data()[-row, ])
+    for (i in row) {
+      leafletProxy("map") %>%
+        clearGroup(table_data()[i, ]$oid_1)
+
+      table_data(table_data()[-i, ])
+      selected_data(selected_data()[-i, ])
+    }
   })
 
   # Clear all selections
   observeEvent(input$clear_selections, {
+    if (is.null(table_data()) || nrow(table_data()) == 0) {
+      showNotification("No selections to clear", type = "warning", duration = 3)
+      return()
+    }
+    showModal(
+      modalDialog(
+        "Are you sure you want to clear all selections?",
+        title = "Clear All Selections",
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("confirm_clear", "Clear All", class = "btn-danger")
+        ),
+        easyClose = TRUE
+      )
+    )
+  })
+
+  observeEvent(input$confirm_clear, {
+    removeModal()
     selected_polygon(NULL)
     selected_data(data.frame(
       id = integer(),
@@ -306,7 +333,7 @@ server <- function(input, output, session) {
     }
 
     datatable(df, options = list(pageLength = 10, searching = TRUE),
-              selection = "single", rownames = FALSE)
+              selection = "multiple", rownames = FALSE)
   })
 
   # Download handler for selected properties
