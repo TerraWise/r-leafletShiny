@@ -366,7 +366,7 @@ server <- function(input, output, session) {
       showModal(
         modalDialog(
           title = "Success",
-          "Your data has been successfully uploaded to TerraWise.",
+          "Your data has been successfully sumbitted to TerraWise.",
           easyClose = FALSE,
           footer = NULL
         )
