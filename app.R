@@ -190,15 +190,14 @@ server <- function(input, output, session) {
       leafletProxy("map") %>%
         setView(lng = center[2], lat = center[1], zoom = 8) %>%
         addPolygons(
-          data = subset, fillColor = "red",
+          data = subset, fillColor = "#D93026",
           weight = 2, opacity = 1, layerId = ~oid_1,
-          color = "red", fillOpacity = 0.4,
+          color = "#92182B", fillOpacity = 0.4,
           popup = popup_content, popupOptions = popupOptions(closeOnClick = TRUE), # nolint: line_length_linter.
           highlight = highlightOptions(
             weight = 4,
-            color = "#666",
-            fillOpacity = 0.7,
-            bringToFront = TRUE
+            color = "#E2E3E4",
+            fillOpacity = 0.7
           )
         )
     }
@@ -215,7 +214,7 @@ server <- function(input, output, session) {
       addPolygons(
         data = filtered %>% filter(oid_1 == selected_polygon()$id),
         fillColor = "yellow", weight = 4, opacity = 1,
-        color = "orange", fillOpacity = 0.7, group = "highlight",
+        color = "#FB8D33", fillOpacity = 0.7, group = "highlight",
         options = pathOptions(clickable = FALSE)
       )
   })
@@ -242,10 +241,10 @@ server <- function(input, output, session) {
           clearGroup("highlight") %>%
           addPolygons(
             data = filtered %>% filter(oid_1 %in% selected_data()$id),
-            fillColor = "blue", weight = 3, opacity = 1,
-            color = "darkblue", fillOpacity = 0.6,
+            fillColor = "#19B4CA", weight = 3, opacity = 1,
+            color = "#009CB2", fillOpacity = 0.6,
             group = as.character(selected_id),
-            options = pathOptions(clickable = FALSE)
+            options = pathOptions(interactive = FALSE)
           )
         table_data(filter(filtered, oid_1 %in% selected_data()$id))
       } else {
