@@ -87,7 +87,7 @@ ui <- fluidPage(
 
       br(),
 
-      actionButton("send_btn", "Submit boundaries to TerraWise",
+      actionButton("send_btn", "Submit boundaries to Planfarm TerraWise",
                    icon = icon("arrow-up-from-bracket"),
                    class = "btn-primary btn-block",
                    style = "margin-top: 15px; color: white;", width = "100%")
@@ -366,7 +366,7 @@ server <- function(input, output, session) {
       showModal(
         modalDialog(
           title = "Success",
-          "Your data has been successfully submitted to TerraWise.",
+          "Your data has been successfully submitted to Planfarm TerraWise.",
           easyClose = FALSE,
           footer = NULL
         )
