@@ -6,13 +6,13 @@ This Shiny application allows users to interactively select and submit farm boun
 
 ## Features
 
-- :world_map: **Interactive Map**: View and search for properties using a Leaflet map with Esri World Imagery basemap.
-- :microscope: **LGA Filtering**: Filter properties by selecting one or more shires (LGAs).
-- :pushpin: **Polygon Selection**: Click polygons to highlight them, then add to your selection.
-- :hammer_and_wrench: **Selection Management**: Add, remove, or clear selected properties.
-- :bar_chart: **Data Table**: View selected properties in a table.
-- [x] **Submission**: Submit selected boundaries as GeoJSON to TerraWise (uploaded to AWS S3).
-- :notebook_with_decorative_cover: **Instructions**: Downloadable PDF instructions available from the app interface.
+:world_map: **Interactive Map**: View and search for properties using a Leaflet map with Esri World Imagery basemap.
+:microscope: **LGA Filtering**: Filter properties by selecting one or more shires (LGAs).
+:pushpin: **Polygon Selection**: Click polygons to highlight them, then add to your selection.
+:hammer_and_wrench: **Selection Management**: Add, remove, or clear selected properties.
+:bar_chart: **Data Table**: View selected properties in a table.
+[x] **Submission**: Submit selected boundaries as GeoJSON to TerraWise (uploaded to AWS S3).
+:notebook_with_decorative_cover: **Instructions**: Downloadable PDF instructions available from the app interface.
 
 ---
 
