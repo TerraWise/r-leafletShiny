@@ -16,7 +16,7 @@ This Shiny application allows users to interactively select and submit farm boun
 
 :bar_chart: **Data Table**: View selected properties in a table.
 
-[x] **Submission**: Submit selected boundaries as GeoJSON to TerraWise (uploaded to AWS S3).
+- [x] **Submission**: Submit selected boundaries as GeoJSON to TerraWise (uploaded to AWS S3).
 
 :notebook_with_decorative_cover: **Instructions**: Downloadable PDF instructions available from the app interface.
 
