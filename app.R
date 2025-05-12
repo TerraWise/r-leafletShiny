@@ -11,6 +11,8 @@ library(aws.s3)
 # Turn off color contrast warnings
 options(bslib.color_contrast_warnings = FALSE)
 
+sf_use_s2(FALSE) # Disable S2 geometry for sf package
+
 # Set AWS credentials
 bucket_name <- "survey-polygons"
 aws_region <- "ap-southeast-2"
@@ -209,6 +211,7 @@ server <- function(input, output, session) {
     # Update the map to highlight the selected polygon
     leafletProxy("map") %>%
       clearGroup("highlight") %>%
+      clearSearchOSM() %>%
       addPolygons(
         data = filtered %>% filter(oid_1 == selected_polygon()$id),
         fillColor = "yellow", weight = 4, opacity = 1,
