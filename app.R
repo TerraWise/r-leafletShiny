@@ -257,8 +257,12 @@ server <- function(input, output, session) {
 
   # Clear selected boundaries
   observeEvent(input$clear_selection, {
-    req(input$table_rows_selected)
     row <- input$table_rows_selected
+
+    if (is.null(row)) {
+      showNotification("No rows selected", type = "warning", duration = 3)
+      return()
+    }
 
     for (i in row) {
       leafletProxy("map") %>%
@@ -271,7 +275,10 @@ server <- function(input, output, session) {
 
   # Clear all selections
   observeEvent(input$clear_selections, {
-    req(table_data())
+    if (is.null(table_data()) || nrow(table_data()) == 0) {
+      showNotification("No selections to clear", type = "warning", duration = 3)
+      return()
+    }
     showModal(
       modalDialog(
         "Are you sure you want to clear all selections?",
