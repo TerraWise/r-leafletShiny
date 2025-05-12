@@ -15,7 +15,7 @@ options(bslib.color_contrast_warnings = FALSE)
 bucket_name <- "survey-polygons"
 aws_region <- "ap-southeast-2"
 
-AWS_credentials <- read.csv("s3-poly-access_accessKeys.csv") # nolint: object_name_linter.
+AWS_credentials <- read.csv("s3-poly-access_accessKeys.csv") # nolint: object_name_linter, line_length_linter.
 
 Sys.setenv("AWS_ACCESS_KEY_ID" = AWS_credentials$Access.key.ID,
            "AWS_SECRET_ACCESS_KEY" = AWS_credentials$Secret.access.key,
@@ -74,14 +74,7 @@ ui <- fluidPage(
         ),
         actionButton("add_to_selection", "Add Selected Polygon to Table",
                      icon = icon("plus"), class = "btn-secondary btn-block",
-                     style = "margin-top: 15px; color: white;", width = "100%")
-      ),
-
-      br(),
-
-      div(
-        style = "background-color: #E2F0D9;
-        padding: 15px; border-radius: 20px;",
+                     style = "margin-top: 15px; color: white;", width = "100%"),
         actionButton("clear_selection", "Clear Selected Property",
                      icon = icon("trash"), class = "btn-danger btn-block",
                      style = "margin-top: 10px;", width = "100%"),
@@ -89,6 +82,8 @@ ui <- fluidPage(
                      icon = icon("explosion"), class = "btn-danger btn-block",
                      style = "margin-top: 10px;", width = "100%")
       ),
+
+      br(),
 
       actionButton("send_btn", "Submit boundaries to TerraWise",
                    icon = icon("arrow-up-from-bracket"),
